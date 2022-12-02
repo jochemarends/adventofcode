@@ -56,7 +56,7 @@ int main() try {
 
         score1 += static_cast<int>(b); // your choice
 
-        if (a < b)		score1 += 6; // win
+        if (a < b)      score1 += 6; // win
         else if (a > b) score1 += 0; // loss
         else		    score1 += 3; // draw
 
