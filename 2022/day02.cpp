@@ -12,7 +12,7 @@ enum Choice {
     scissors
 };
 
-/* does a win from b? */
+/* is a stronger than b? */
 bool operator>(Choice a, Choice b) {
     switch (a) {
     case rock:
@@ -24,7 +24,7 @@ bool operator>(Choice a, Choice b) {
     }
 }
 
-/* does a lose from b? */
+/* is a weaker than b? */
 bool operator<(Choice a, Choice b) {
     return !(a > b) && a != b;
 }
