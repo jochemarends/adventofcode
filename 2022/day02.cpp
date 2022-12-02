@@ -26,14 +26,7 @@ bool operator>(Choice a, Choice b) {
 
 /* does a lose from b? */
 bool operator<(Choice a, Choice b) {
-    switch (a) {
-    case rock:
-        return b == paper;
-    case paper:
-        return b == scissors;
-    case scissors:
-        return b == rock;
-    }
+    return !(a > b) && a != b;
 }
 
 const std::map<char, Choice> map{
