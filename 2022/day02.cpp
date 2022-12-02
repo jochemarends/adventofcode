@@ -58,7 +58,7 @@ int main() try {
 
         if (a < b)		score1 += 6; // win
         else if (a > b) score1 += 0; // loss
-        else			score1 += 3; // draw
+        else		    score1 += 3; // draw
 
         /* part 2 */
         Choice c;
