@@ -36,13 +36,21 @@ int main() try {
 		ifs >> s >> count >> s >> from >> s >> to;
 		if (!ifs) break;
 		
+		std::vector<char> vec;
 		for (std::size_t i = 0; i < count; ++i) {
-			v[to - 1].push(v[from - 1].top());
+			vec.push_back(v[from - 1].top());
 			v[from - 1].pop();
+		}
+
+
+		std::reverse(vec.begin(), vec.end());
+		for (auto ch : vec) {
+			v[to - 1].push(ch);
 		}
 	}
 
 	for (auto col : v) {
+		if (col.size() == 0) continue;
 		std::cout << col.top();
 	}
 }
