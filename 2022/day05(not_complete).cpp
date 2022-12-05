@@ -54,7 +54,7 @@ int main() try {
             dst_iter1->push(src_iter1->top());
             src_iter1->pop();
 
-            /* part 2*/
+            /* part 2 */
             temp.push_back(src_iter2->top());
             src_iter2->pop();
         }
