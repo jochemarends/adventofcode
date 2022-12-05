@@ -16,17 +16,18 @@ int main() try {
     for (std::string line; std::getline(ifs, line) && !line.empty();)
         lines.push_back(line);
 
-    std::size_t columns = 0;
-    for (char ch : lines.back()) {
-        if (isdigit(ch)) ++columns;
+    std::vector<std::size_t> column_positions;
+    for (std::size_t i = 0; char ch : lines.back()) {
+        if (isdigit(ch)) column_positions.push_back(i);
+        ++i;
     }
 
-    std::vector<std::stack<char>> v{ columns };
+    std::vector<std::stack<char>> v{ column_positions.size() };
 
     /* push the data onto the stack structures */
     for (const std::string& line : std::views::reverse(lines)) {
         for (std::size_t i = 0; i < v.size(); ++i) {
-            char ch = line[1 + 4 * i];
+            char ch = line[column_positions[i]];
             if (std::isspace(ch)) continue;
             v[i].push(ch);
         }
