@@ -7,8 +7,6 @@
 #include <numeric>
 #include <ranges>
 
-using Column = std::stack<char>;
-
 int main() try {
     std::ifstream ifs{ "input.txt" };
     if (!ifs) throw std::runtime_error{ "failed to open input file" };
