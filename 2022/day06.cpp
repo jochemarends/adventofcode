@@ -17,17 +17,15 @@ int main() try {
         std::vector<int> sub_vec{ vec.begin() + i - 3, vec.begin() + i + 1 };
         std::sort(sub_vec.begin(), sub_vec.end());
         /* will change the end in case of duplicates */
-        if (std::unique(sub_vec.begin(), sub_vec.end()) != sub_vec.end()) continue;
-        break;
+        if (std::unique(sub_vec.begin(), sub_vec.end()) == sub_vec.end()) break;
     }
 
     std::size_t part2 = 14;
     for (std::size_t i = 13; i < vec.size(); ++i, ++part2) {
-        std::vector<char> temp{ vec.begin() + i - 13, vec.begin() + i + 1 };
-        std::sort(temp.begin(), temp.end());
+        std::vector<char> sub_vec{ vec.begin() + i - 13, vec.begin() + i + 1 };
+        std::sort(sub_vec.begin(), sub_vec.end());
         /* will change the end in case of duplicates */
-        if (std::unique(temp.begin(), temp.end()) != temp.end()) continue;
-        break;
+        if (std::unique(sub_vec.begin(), sub_vec.end()) == sub_vec.end()) break;
     }
 
     std::cout << "part 1: " << part1 << '\n';
