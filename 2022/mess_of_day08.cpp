@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -18,7 +17,7 @@ int main() try {
         std::ranges::transform(line, std::back_inserter(vec.back()), [](char ch) { return ch - '0'; });
     }
 
-    std::size_t part1 = 0;
+    int part1 = 0;
     int part2 = 0;
     std::vector<int> scores;
     for (auto it1 = vec.begin(); it1 != vec.end(); ++it1) {
@@ -42,22 +41,21 @@ int main() try {
             bool is_visible = false;
 
             /* extract trees on the left */
-            std::vector<int> left;
-            std::copy_n(row.begin(), std::distance(row.begin(), it2), std::back_inserter(left));
+            std::vector<int> left{ row.begin(), it2 };
             std::ranges::reverse(left);
             if (std::ranges::max(left) < height) {
                 is_visible = true;
             }
 
             /* extract trees on the right */
-            std::vector<int> right;
-            std::copy(std::next(it2), row.end(), std::back_inserter(right));
+            std::vector<int> right{ std::next(it2), row.end() };
             if (std::ranges::max(right) < height) {
                 is_visible = true;
             }
 
             /* extract trees above */
             std::vector<int> above;
+            /* index of column we need to extract */
             std::size_t index = std::distance(row.begin(), it2);
             std::transform(vec.begin(), it1, std::back_inserter(above), [index](const auto& row) { return row[index]; });
             std::ranges::reverse(above);
@@ -77,11 +75,11 @@ int main() try {
             /* part 2 */
             std::vector<int> distances;
             for (const auto& vec : { above, left, right, below }) {
-                distances.push_back({});
-                for (int i : vec) {
-                    ++distances.back();
-                    if (height <= i) break;
-                }
+                /* search for a tree that is higher or equal than the current one */
+                auto it = std::ranges::find_if(vec, [height](int i) { return height <= i; });
+                distances.push_back(std::distance(vec.begin(), it));
+                /* if we have not reached the edge yet, we are looking at one more tree! */
+                if (it != vec.end()) distances.back()++;
             }
             scores.push_back(std::accumulate(distances.begin(), distances.end(), 1, std::multiplies()));
         }
