@@ -30,22 +30,8 @@ Point& operator+=(Point& a, Point b) {
     return a;
 }
 
-Point& operator-=(Point& a, Point b) {
-    a.first -= b.first; a.second -= b.second;
-    return a;
-}
-
 Point operator-(Point a, Point b) {
     return Point{ a.first - b.first, a.second - b.second };
-}
-
-Point abs(Point p) { 
-    return Point{ std::abs(p.first), std::abs(p.second) };
-}
-
-double dist(Point a, Point b) {
-    auto [dx, dy] = b - a;
-    return std::sqrt(dx * dx + dy * dy);
 }
 
 template<std::size_t N>
@@ -69,23 +55,6 @@ void update(std::span<Point, N> rope, Direction dir) {
         if (std::abs(dy) > 1 || !is_touching) {
             ty += std::max(-1, std::min(dy, 1));
         }
-    }
-}
-
-void update(Point& head, Point& tail, Direction dir) {
-    head += dir_to_point.at(dir);
-    auto  [dx, dy] = head - tail;
-    auto& [tx, ty] = tail;
-
-    /* ropes are touching if the distance between them is not higher than 2.0 */
-    bool is_touching = std::sqrt(dx * dx + dy * dy) <= 2.0;
-
-    /* add normalized direction if needed */
-    if (std::abs(dx) > 1 || !is_touching) {
-        tx += std::max(-1, std::min(dx, 1));
-    }
-    if (std::abs(dy) > 1 || !is_touching) {
-        ty += std::max(-1, std::min(dy, 1));
     }
 }
 
