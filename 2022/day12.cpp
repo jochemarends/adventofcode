@@ -19,9 +19,6 @@ std::ostream& operator<<(std::ostream& os, point p) {
 }
 
 int main() try {
-    const int data[]{1, 2, 3, 4};
-    const int target{2};
-
     std::ifstream ifs{"input.txt"};
     if (!ifs) {
         throw std::runtime_error{"error: failed to open input file"};
