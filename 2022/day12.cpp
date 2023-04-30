@@ -110,13 +110,6 @@ int main() try {
     while (!queue.empty()) {
         auto [curr_point, n] = queue.front();
         queue.pop();
-        
-        auto get_value = [&](point p) {
-            char ch = map[p.x][p.y];
-            if (ch == 'S') return 'a';
-            if (ch == 'E') return 'z';
-            return ch;
-        };
 
         if (get_value(curr_point) < get_value(lowest_point)) {
             lowest_point = curr_point;
@@ -131,8 +124,8 @@ int main() try {
         };
 
         auto is_reachable = [&](point prev_point) {
-            char curr = get_value(curr_point);
-            char prev = get_value(prev_point);
+            char curr = get_height(curr_point);
+            char prev = get_height(prev_point);
             return curr - prev < 2;
         };
 
