@@ -26,14 +26,23 @@ std::strong_ordering operator<=>(int a, const packet& b) {
     }, b.data.front());
 }
 
+#include <compare>
+
 std::strong_ordering operator<=>(const packet& a, const packet& b) {
     if (a.data.empty() || b.data.empty()) {
         return a.data.size() <=> b.data.size();
     }
 
-    return std::visit([&](const auto& c, const auto& d){
-        return c <=> d;
-    }, a.data.front(), b.data.front());
+    auto compare = [](const auto& c, const auto& d) -> std::strong_ordering {
+        return std::visit([&](const auto& a, const auto& b){
+            return a <=> b;
+        }, c, d);
+    };
+
+    return std::lexicographical_compare_three_way(
+        a.data.begin(), a.data.end(),
+        b.data.begin(), b.data.end(), compare
+    );
 }
 
 std::istream& operator>>(std::istream& is, packet& p) {
@@ -68,22 +77,26 @@ std::ostream& operator<<(std::ostream& os, const packet& p) {
     return os << ']';
 }
 
-void is_sorted(const packet& a, const packet& b) {
-    auto it1 = a.data.begin();
-    auto it2 = b.data.begin();
-
-}
-
 int main() try {
     std::ifstream ifs{"input.txt"};
     if (!ifs) {
         throw std::runtime_error{"error: failed to open input file"};
     }
 
-    std::vector<packet> vec{std::istream_iterator<packet>{ifs}, std::istream_iterator<packet>{}};
-    std::cout << vec[0] << '\n';
-    std::cout << vec[1] << '\n';
-    std::cout << !std::ranges::lexicographical_compare(vec[1].data, vec[0].data) << '\n';
+
+    std::vector<std::pair<packet, packet>> vec;
+    for (packet a, b; ifs >> a >> b;) {
+        vec.push_back(std::make_pair(a, b));
+    }
+
+    std::size_t part1{};
+    for (std::size_t idx{0}; idx < vec.size(); ++idx) {
+        if (vec[idx].first < vec[idx].second) {
+            part1 += idx + 1;
+        }
+    }
+
+    std::cout << "part 1: " << part1 << '\n';
 }
 catch (std::exception& e) {
     std::cerr << e.what() << '\n';
