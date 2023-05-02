@@ -4,16 +4,21 @@
 #include <vector>
 #include <ranges>
 #include <variant>
-#include <algorithm>
+#include <compare>
 
 struct packet {
     std::vector<std::variant<packet, int>> data;
 };
 
+std::strong_ordering operator<=>(const packet& a, const packet& b);
+
 std::strong_ordering operator<=>(const packet& a, int b) {
     if (a.data.empty()) return std::strong_ordering::less;
 
     return std::visit([&](const auto& data){
+        if (std::is_eq(data <=> b) && a.data.size() > 1) {
+            return std::strong_ordering::greater;
+        }
         return data <=> b;
     }, a.data.front());
 }
@@ -22,11 +27,12 @@ std::strong_ordering operator<=>(int a, const packet& b) {
     if (b.data.empty()) return std::strong_ordering::greater;
 
     return std::visit([&](const auto& data){
+        if (std::is_eq(a <=> data) && b.data.size() > 1) {
+            return std::strong_ordering::less;
+        }
         return a <=> data;
     }, b.data.front());
 }
-
-#include <compare>
 
 std::strong_ordering operator<=>(const packet& a, const packet& b) {
     if (a.data.empty() || b.data.empty()) {
@@ -83,15 +89,16 @@ int main() try {
         throw std::runtime_error{"error: failed to open input file"};
     }
 
-
     std::vector<std::pair<packet, packet>> vec;
     for (packet a, b; ifs >> a >> b;) {
-        vec.push_back(std::make_pair(a, b));
+        vec.emplace_back(a, b);
     }
 
     std::size_t part1{};
     for (std::size_t idx{0}; idx < vec.size(); ++idx) {
-        if (vec[idx].first < vec[idx].second) {
+        auto [a, b] = vec[idx];
+        std::cout << a << " < " << b << " = " << std::boolalpha << (a < b) << '\n';
+        if (a < b) {
             part1 += idx + 1;
         }
     }
