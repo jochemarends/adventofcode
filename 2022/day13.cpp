@@ -1,7 +1,9 @@
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <ranges>
 #include <variant>
 #include <compare>
@@ -9,8 +11,6 @@
 struct packet {
     std::vector<std::variant<packet, int>> data;
 };
-
-std::strong_ordering operator<=>(const packet& a, const packet& b);
 
 std::strong_ordering operator<=>(const packet& a, int b) {
     if (a.data.empty()) return std::strong_ordering::less;
@@ -89,21 +89,28 @@ int main() try {
         throw std::runtime_error{"error: failed to open input file"};
     }
 
-    std::vector<std::pair<packet, packet>> vec;
-    for (packet a, b; ifs >> a >> b;) {
-        vec.emplace_back(a, b);
+    std::vector<packet> v{std::istream_iterator<packet>{ifs}, std::istream_iterator<packet>{}};
+
+    std::size_t part1{0};
+    for (std::size_t idx{1}, pair_idx{1}; idx < v.size(); idx += 2, ++pair_idx) {
+        packet a = v[idx - 1];
+        packet b = v[idx];
+        if (a < b) part1 += pair_idx;
     }
 
-    std::size_t part1{};
-    for (std::size_t idx{0}; idx < vec.size(); ++idx) {
-        auto [a, b] = vec[idx];
-        std::cout << a << " < " << b << " = " << std::boolalpha << (a < b) << '\n';
-        if (a < b) {
-            part1 += idx + 1;
-        }
-    }
+    std::istringstream iss{"[[2]] [[6]]"};
+    packet dividers[2];
+    std::copy(std::istream_iterator<packet>{iss}, std::istream_iterator<packet>{}, std::begin(dividers));
+    std::ranges::copy(dividers, std::back_inserter(v));
+
+    std::sort(v.begin(), v.end());
+
+    auto it1 = std::lower_bound(v.begin(), v.end(), dividers[0]);
+    auto it2 = std::lower_bound(v.begin(), v.end(), dividers[1]);
+    std::size_t part2 = (std::distance(v.begin(), it1) + 1) * (std::distance(v.begin(), it2) + 1);
 
     std::cout << "part 1: " << part1 << '\n';
+    std::cout << "part 2: " << part2 << '\n';
 }
 catch (std::exception& e) {
     std::cerr << e.what() << '\n';
