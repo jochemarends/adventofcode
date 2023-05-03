@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 #include <ranges>
 #include <variant>
 #include <compare>
@@ -50,6 +51,10 @@ std::strong_ordering operator<=>(const packet& a, const packet& b) {
         b.data.begin(), b.data.end(), compare
     );
 }
+
+bool operator==(const packet& a, const packet& b) {
+    return std::is_eq(a <=> b);
+};
 
 std::istream& operator>>(std::istream& is, packet& p) {
     if ((is >> std::ws).get() != '[') is.setstate(std::ios_base::failbit);
@@ -99,15 +104,18 @@ int main() try {
     }
 
     std::istringstream iss{"[[2]] [[6]]"};
-    packet dividers[2];
-    std::copy(std::istream_iterator<packet>{iss}, std::istream_iterator<packet>{}, std::begin(dividers));
+    std::vector<packet> dividers;
+    std::copy(std::istream_iterator<packet>{iss}, std::istream_iterator<packet>{}, std::back_inserter(dividers));
     std::ranges::copy(dividers, std::back_inserter(v));
+    std::ranges::sort(v);
 
-    std::sort(v.begin(), v.end());
+    // a view of the indices of the divider packets
+    auto view = std::views::transform(dividers, [&](const packet& p) {
+        auto it = std::ranges::lower_bound(v, p);
+        return std::distance(v.begin(), it) + 1;
+    });
 
-    auto it1 = std::lower_bound(v.begin(), v.end(), dividers[0]);
-    auto it2 = std::lower_bound(v.begin(), v.end(), dividers[1]);
-    std::size_t part2 = (std::distance(v.begin(), it1) + 1) * (std::distance(v.begin(), it2) + 1);
+    std::size_t part2 = std::accumulate(view.begin(), view.end(), 1, std::multiplies{});
 
     std::cout << "part 1: " << part1 << '\n';
     std::cout << "part 2: " << part2 << '\n';
