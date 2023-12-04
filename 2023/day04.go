@@ -25,7 +25,6 @@ func main() {
 
     defer file.Close()
 
-
     scanner := bufio.NewScanner(file)
     var matches, pile []int
     var part1 int
@@ -60,3 +59,4 @@ func main() {
     fmt.Println("Part 1:", part1)
     fmt.Println("Part 2:", part2)
 }
+
