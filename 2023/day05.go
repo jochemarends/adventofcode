@@ -1,31 +1,79 @@
 package main
 
 import (
-    "fmt"
-    "os"
-    "bufio"
-    "strings"
-    "strconv"
-    "slices"
+	"bufio"
+	"cmp"
+	"fmt"
+	"iter"
+	"log"
+	"os"
+	"slices"
+	"strconv"
+	"strings"
 )
 
-func min(a, b int) int {
-    if a < b {
-        return a
-    }
-    return b
-}
-
-func max(a, b int) int {
-    if a > b {
-        return a
-    }
-    return b
-}
-
 type Range struct {
-    From   int
+    Start  int
     Length int
+}
+
+func (r Range) End() int {
+    return r.Start + r.Length - 1
+}
+
+func (r Range) Values() iter.Seq[int] {
+    return func(yield func(int) bool) {
+        for i := 0; i < r.Length; i++ {
+            if !yield(r.Start + i) {
+                return
+            }
+        }
+    }
+}
+
+func (r Range) Contains(num int) bool {
+    return num >= r.Start && num < (r.Start + r.Length)
+}
+
+func (r Range) ContainsRange(other Range) bool {
+    return r.Contains(other.Start) && r.Contains(other.End())
+}
+
+func (r Range) Intersects(other Range) bool {
+    return r.Contains(other.Start) || r.Contains(other.End())
+}
+
+func (r Range) Intersection(other Range) Range {
+    var rng Range
+
+    if r.Intersects(other) {
+        rng.Start = max(r.Start, other.Start)
+        end := min(r.End(), other.End())
+        rng.Length = end - rng.Start
+    }
+     
+    return rng
+}
+
+func (r Range) Exclude(other Range) (result []Range) {
+    if !r.Intersects(other) {
+        result = append(result, r)
+        return
+    }
+
+    if other.ContainsRange(r) {
+       return
+    }
+
+    if other.Start < r.Start {
+        result = append(result, Range{Start: r.Start, Length: other.Start - r.Start})
+    }
+
+    if other.End() < r.End() {
+        result = append(result, Range{Start: other.End(), Length: r.End() - other.End()})
+    }
+
+    return
 }
 
 type Mapping struct {
@@ -33,44 +81,95 @@ type Mapping struct {
     To int
 }
 
-type Map []Mapping
-
-func (r Range) Contains(i int) bool {
-    return i >= r.From && i < (r.From + r.Length - 1)
+type Map struct {
+    mappings []Mapping
 }
 
-func (m Mapping) Convert(r Range) (ranges []Range) {
-    n := m.First - r.First
+func (m *Map) Convert (num int) int {
+    index := slices.IndexFunc(m.mappings, func(mapping Mapping) bool {
+        return mapping.Contains(num)
+    })
 
-    if n > 0 {
-        r := Range{n, r.Length - n}
-        ranges = append(ranges r)
+    if index != -1 {
+        mapping := m.mappings[index]
+        num += (mapping.To - mapping.Start)
     }
 
-    if n > 
+    return num
 }
 
+func (m *Map) ConvertRange(r Range) (res []Range) {
+    index := slices.IndexFunc(m.mappings, func(mapping Mapping) bool {
+        return r.Contains(mapping.Range.Start) || r.Contains(mapping.Range.End())
+    })
 
-func main() {
-    file, err := os.Open("./input.txt")
+    // if one intersection was found
+    if index != -1 {
+        mapping := m.mappings[index]
+        in := mapping.Intersection(r)
 
-    if err != nil {
-        fmt.Println("Error:", err)
-        os.Exit(1)
+        for _, ex := range r.Exclude(in) {
+            for _, r := range m.ConvertRange(ex){
+                res = append(res, r)
+            }
+        }
     }
 
-    scanner := bufio.NewScanner(file)
+    return
+}
+
+type Almanac struct {
+    seeds []int
+    maps  []Map
+}
+
+func (a *Almanac) Solve(num int) int {
+    for _, mapper := range a.maps {
+        num = mapper.Convert(num)
+    }
+    return num
+}
+
+func (a *Almanac) SolveRange(r Range) (solved []Range) {
+    solved = append(solved, r)
+
+    for _, mapper := range a.maps {
+        var mapped []Range
+
+        for _, r := range solved {
+            for _, converted := range mapper.ConvertRange(r) {
+                mapped = append(mapped, converted)
+            }
+        }
+
+        solved = mapped
+    }
+
+    return
+}
+
+func parseAlmanac(scanner *bufio.Scanner) (almanac *Almanac, err error) {
     scanner.Scan()
+    almanac = &Almanac{}
 
     // extract the seed values
-    line, _ := strings.CutPrefix(scanner.Text(), "seeds: ")
-    seeds  := []int{}
+    line, found := strings.CutPrefix(scanner.Text(), "seeds: ")
+    if !found {
+        err = fmt.Errorf("the seeds are missing from the almanac!")
+        return
+    }
+    
     for _, field := range strings.Fields(line) {
-        seed, _ := strconv.Atoi(field)
-        seeds = append(seeds, seed)
+        var seed int
+        seed, err = strconv.Atoi(field)
+
+        if err != nil {
+            return
+        }
+
+        almanac.seeds = append(almanac.seeds, seed)
     }
 
-    var maps []Map
     for scanner.Scan() {
         line = scanner.Text()
 
@@ -79,38 +178,77 @@ func main() {
         }
 
         if strings.HasSuffix(line, "map:") {
-            maps = append(maps, Map{})
+            almanac.maps = append(almanac.maps, Map{})
             continue
         }
 
         var mapping Mapping
-        fmt.Sscanf(line, "%d%d%d", &mapping.To, &mapping.From, &mapping.Length)
-        top := len(maps) - 1
-        maps[top] = append(maps[top], mapping)
-    }
+        _, err = fmt.Sscanf(line, "%d%d%d", &mapping.To, &mapping.Start, &mapping.Length)
+        
+        if err != nil {
+            return
+        }
 
-    nums := make([]int, len(seeds))
-    copy(nums, seeds)
-    for _, mappings := range maps {
-        for i, num := range nums {
-            j := slices.IndexFunc(mappings, func(mapping Mapping) bool {
-                return num >= mapping.From && num < (mapping.From + mapping.Length)
-            })
-            
-            if j != -1 {
-                nums[i] += mappings[j].To - mappings[j].From
-            }
+        if len(almanac.maps) == 0 {
+            err = fmt.Errorf("expected a map header before an entry")
+            return
+        } else {
+            top := len(almanac.maps) - 1
+            almanac.maps[top].mappings = append(almanac.maps[top].mappings, mapping)
         }
     }
 
-    var ranges []Range
-    for i := 0; i < len(seeds); i += 2 {
-        ranges = append(ranges, Range{seeds[i], seeds[i + 1]})
-    }
-    part1 := slices.Min(nums)
+    return
+}
 
+func part1(almanac *Almanac) int {
+    nums := make([]int, len(almanac.seeds))
+    copy(nums, almanac.seeds)
+
+    for i, num := range nums {
+        nums[i] = almanac.Solve(num)
+    }
     
-    fmt.Println("Part1:", part1)
-    fmt.Println("Part1:", ranges)
+    return slices.Min(nums)
+}
+
+func part2(almanac *Almanac) int {
+    var seeds []Range
+    var solutions []Range
+
+    for i := 0; i < len(almanac.seeds); i += 2 {
+        r := Range{almanac.seeds[i], almanac.seeds[i + 1]}
+        seeds = append(seeds, r)
+    }
+
+    for _, r := range seeds {
+        for _, solved := range almanac.SolveRange(r) {
+            solutions = append(solutions, solved)
+        }
+    }
+    
+    solution := slices.MinFunc(solutions, func(a, b Range) int {
+        return cmp.Compare(a.Start, b.Start)
+    })
+
+    return solution.Start
+}
+
+func main() {
+    file, err := os.Open("./input.txt")
+
+    if err != nil {
+        log.Fatalln(err)
+    }
+
+    scanner := bufio.NewScanner(file)
+    almanac, err := parseAlmanac(scanner)
+
+    if err != nil {
+        log.Fatalln(err)
+    }
+    
+    fmt.Println("Part1:", part1(almanac))
+    fmt.Println("Part2:", part2(almanac))
 }
 
