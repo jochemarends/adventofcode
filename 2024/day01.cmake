@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-file(READ input.txt input)
-
-string(REPLACE "\n" ";" lines ${input})
+file(STRINGS input.txt lines)
 
 foreach(line IN LISTS lines)
     string(REGEX REPLACE " +" ";" pair "${line}")
