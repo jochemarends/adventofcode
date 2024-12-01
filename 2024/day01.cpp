@@ -11,7 +11,7 @@
 #include <set>
 #include <vector>
 
-template<std::output_iterator<int> Iter1, std::output_iterator<int>Iter2>
+template<std::output_iterator<int> Iter1, std::output_iterator<int> Iter2>
 void parse(std::istream& is, Iter1 left, Iter2 right) {
     auto data = std::views::istream<int>(is) | std::ranges::to<std::vector>();
     std::ranges::copy(data | std::views::stride(2), left);
