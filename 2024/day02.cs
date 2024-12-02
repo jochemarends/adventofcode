@@ -17,7 +17,7 @@ namespace AdventOfCode
         static int Part1(IEnumerable<IEnumerable<int>> input)
             => input.Where(IsSuperSafe).Count();
 
-        static int Part2(IEnumerable<IList<int>> input)
+        static int Part2(IEnumerable<IEnumerable<int>> input)
             => input.Where(IsSafe).Count();
 
         static IEnumerable<IList<int>> Parse(StreamReader stream)
