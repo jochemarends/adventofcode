@@ -40,8 +40,7 @@ tailrec fun compute(input: List<Token>, part: Part, sum: Int = 0): Int {
     return when {
         input.isEmpty() -> sum
         part == Part.TWO && input.first().type == T.PAUSE -> {
-            val leftovers = input
-                .dropWhile { it.type != T.RESUME }
+            val leftovers = input.dropWhile { it.type != T.RESUME }
             return compute(leftovers, part, sum)
         }
         input.take(6).map { it.type } == listOf(T.MUL, T.LPAREN, T.NUMBER, T.COMMA, T.NUMBER, T.RPAREN) -> {
