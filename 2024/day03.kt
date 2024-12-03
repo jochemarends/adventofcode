@@ -22,8 +22,8 @@ tailrec fun tokenize(input: String, toks: MutableList<Token> = mutableListOf()):
             val digits = input.takeWhile { it.isDigit() }
             when {
                 input.startsWith("mul") -> Token("mul", T.MUL)
-                input.startsWith("don't") -> Token("don't", T.PAUSE)
-                input.startsWith("do") -> Token("do", T.RESUME)
+                input.startsWith("don't()") -> Token("don't()", T.PAUSE)
+                input.startsWith("do()") -> Token("do()", T.RESUME)
                 digits.length in 1..3 -> Token(digits, T.NUMBER)
                 else -> Token(c.toString(), T.CORRUPT)
             }
