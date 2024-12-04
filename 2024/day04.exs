@@ -20,7 +20,7 @@ end
 
 defmodule Day4.Part1 do
   import Day4
-  @chunk_size String.length("XMAX")
+  @window_size String.length("XMAX")
 
   defp is_match?(["X", "M", "A", "S"]), do: true
   defp is_match?(["S", "A", "M", "X"]), do: true
@@ -28,7 +28,7 @@ defmodule Day4.Part1 do
 
   defp count_matches(mat, :rows) do
     mat
-    |> Enum.flat_map(&Enum.chunk_every(&1, @chunk_size, 1, :discard))
+    |> Enum.flat_map(&Enum.chunk_every(&1, @window_size, 1, :discard))
     |> Enum.count(&is_match?/1)
   end
 
@@ -40,7 +40,7 @@ defmodule Day4.Part1 do
   end
 
   defp count_matches(mat, :diag) do
-    windows(mat, @chunk_size)
+    windows(mat, @window_size)
     |> Enum.map(&diagonals/1)
     |> Enum.map(fn win -> Enum.count(win, &is_match?/1) end)
     |> Enum.sum()
@@ -55,20 +55,14 @@ end
 
 defmodule Day4.Part2 do
   import Day4
-  @chunk_size String.length("MAS")
-  defguardp is_square(mat, n) when length(mat) == n and length(hd mat) == n
+  @window_size String.length("MAS")
 
-  defp is_match?(mat) when is_square(mat, @chunk_size) do
-    mat 
-    |> diagonals()
-    |> Enum.all?(&is_match?/1)
-  end
-
+  defp is_match?(mat) when is_list(hd mat), do: Enum.all?(diagonals(mat), &is_match?/1)
   defp is_match?(["M", "A", "S"]), do: true
   defp is_match?(["S", "A", "M"]), do: true
   defp is_match?(_), do: false
 
-  def solve(mat), do: windows(mat, @chunk_size) |> Enum.count(&is_match?/1)
+  def solve(mat), do: windows(mat, @window_size) |> Enum.count(&is_match?/1)
 end
 
 input = File.stream!("./input.txt")
