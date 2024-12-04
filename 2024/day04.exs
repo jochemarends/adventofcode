@@ -1,6 +1,4 @@
 defmodule Day4 do
-  defguardp is_square(mat, n) when length(mat) == n and length(hd mat) == n
-
   defp diagonal(mat, :left) do
     0..(length(mat) - 1)
     |> Enum.map(fn i -> Enum.at(Enum.at(mat, i), i) end)
@@ -67,12 +65,36 @@ defmodule Day4.Part1 do
     |> Enum.sum()
   end
 
-  def solve(grid), do: count_matches(grid)
+  def solve(mat), do: count_matches(mat)
 end
 
-grid = File.stream!("./input.txt")
+defmodule Day4.Part2 do
+  import Day4
+  @chunk_size String.length("MAS")
+  defguardp is_square(mat, n) when length(mat) == n and length(hd mat) == n
+
+  defp is_match?(mat) when is_square(mat, @chunk_size) do
+    mat 
+    |> diagonals()
+    |> Enum.all?(&is_match?/1)
+  end
+
+  defp is_match?(["M", "A", "S"]), do: true
+  defp is_match?(["S", "A", "M"]), do: true
+  defp is_match?(_), do: false
+
+  defp count_matches(mat) do
+    windows(mat, @chunk_size)
+    |> Enum.count(&is_match?/1)
+  end
+
+  def solve(mat), do: count_matches(mat)
+end
+
+input = File.stream!("./input.txt")
   |> Enum.map(&String.trim/1)
   |> Enum.map(&String.graphemes/1)
  
-IO.puts("part 1: #{Day4.Part1.solve(grid)}")
+IO.puts("part 1: #{Day4.Part1.solve(input)}")
+IO.puts("part 2: #{Day4.Part2.solve(input)}")
 
