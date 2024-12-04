@@ -4,11 +4,7 @@ defmodule Day4 do
     |> Enum.map(fn i -> Enum.at(Enum.at(mat, i), i) end)
   end
 
-  defp diagonal(mat, :right) do
-    mat
-    |> Enum.map(&Enum.reverse/1)
-    |> diagonal(:left)
-  end
+  defp diagonal(mat, :right), do: Enum.map(mat, &Enum.reverse/1) |> diagonal(:left)
 
   def diagonals(mat), do: [:left, :right] |> Enum.map(&diagonal(mat, &1))
 
@@ -16,13 +12,8 @@ defmodule Day4 do
     for row <- 0..(length(mat) - n),
          col <- 0..(length(List.first(mat)) - n) do
       mat
-      |> Enum.drop(row)
-      |> Enum.take(n)
-      |> Enum.map(fn row ->
-        row
-        |> Enum.drop(col)
-        |> Enum.take(n)
-      end)
+      |> Enum.slice(row, n)
+      |> Enum.map(&Enum.slice(&1, col, n))
     end
   end
 end
