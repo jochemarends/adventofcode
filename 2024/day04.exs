@@ -28,12 +28,8 @@ defmodule Day4.Part1 do
 
   defp count_matches(mat, :rows) do
     mat
-    |> Enum.map(fn row ->
-      row
-      |> Enum.chunk_every(@chunk_size, 1,:discard)
-      |> Enum.count(&is_match?/1)
-    end)
-    |> Enum.sum()
+    |> Enum.flat_map(&Enum.chunk_every(&1, @chunk_size, 1, :discard))
+    |> Enum.count(&is_match?/1)
   end
 
   defp count_matches(mat, :cols) do
@@ -50,13 +46,11 @@ defmodule Day4.Part1 do
     |> Enum.sum()
   end
 
-  defp count_matches(mat) do
+  def solve(mat) do
     [:rows, :cols, :diag] 
     |> Enum.map(&count_matches(mat, &1))
     |> Enum.sum()
   end
-
-  def solve(mat), do: count_matches(mat)
 end
 
 defmodule Day4.Part2 do
@@ -74,12 +68,7 @@ defmodule Day4.Part2 do
   defp is_match?(["S", "A", "M"]), do: true
   defp is_match?(_), do: false
 
-  defp count_matches(mat) do
-    windows(mat, @chunk_size)
-    |> Enum.count(&is_match?/1)
-  end
-
-  def solve(mat), do: count_matches(mat)
+  def solve(mat), do: windows(mat, @chunk_size) |> Enum.count(&is_match?/1)
 end
 
 input = File.stream!("./input.txt")
