@@ -10,7 +10,7 @@ defmodule Day4 do
 
   def windows(mat, n) do
     for row <- 0..(length(mat) - n),
-         col <- 0..(length(List.first(mat)) - n) do
+        col <- 0..(length(List.first(mat)) - n) do
       mat
       |> Enum.slice(row, n)
       |> Enum.map(&Enum.slice(&1, col, n))
