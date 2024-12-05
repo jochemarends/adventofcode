@@ -44,9 +44,9 @@ defmodule Day5 do
     end)
 
     case rule do
-      [^a, ^b] -> a < b
-      [^b, ^a] -> b > a
-      _ -> false
+      [^a, ^b] -> a <= b
+      [^b, ^a] -> b <= a
+      _ -> true
     end
   end
 
@@ -62,11 +62,15 @@ defmodule Day5 do
   end
 
   def part2({ rules, updates }) do
-    sort(rules, Enum.at(updates, 0))
+    updates
+    |> Enum.reject(&is_ordered?(rules, &1))
+    |> Enum.map(&sort(rules, &1))
+    |> Enum.map(&middle/1)
+    |> Enum.sum()
   end
 end
 
 input = Day5.parse(File.stream!("input.txt"))
 IO.puts("part 1: #{Day5.part1(input)}")
-Day5.part2(input) |> Enum.take(3) |> IO.puts()
+IO.puts("part 2: #{Day5.part2(input)}")
 
