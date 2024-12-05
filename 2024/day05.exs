@@ -21,12 +21,12 @@ defmodule Day5 do
 
   defp middle(list), do: Enum.at(list, length(list) |> div(2))
 
-  defp sum_midpoints(updates), do: Enum.map(updates, &middle/1) |> Enum.sum()
+  defp sum_middles(updates), do: Enum.map(updates, &middle/1) |> Enum.sum()
 
   def part1([rules, updates]) do
     updates
     |> Enum.filter(&is_sorted?(&1, rules))
-    |> sum_midpoints()
+    |> sum_middles()
   end
 
   defp sort(update, rules), do: Enum.sort(update, &is_sorted?([&1, &2], rules))
@@ -35,7 +35,7 @@ defmodule Day5 do
     updates
     |> Enum.reject(&is_sorted?(&1, rules))
     |> Enum.map(&sort(&1, rules))
-    |> sum_midpoints()
+    |> sum_middles()
   end
 end
 
