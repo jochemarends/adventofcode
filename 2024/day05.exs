@@ -10,7 +10,7 @@ defmodule Day5 do
   def parse(input, :elems), do: String.to_integer(input)
 
   defp is_sorted?(update, [_, _] = rule) do
-    case Enum.map(rule, fn n -> Enum.find_index(update, &(&1==n)) end) do
+    case Enum.map(rule, fn n -> Enum.find_index(update, &(&1 == n)) end) do
       [nil, _] -> true
       [_, nil] -> true
       [a, b] -> a < b
