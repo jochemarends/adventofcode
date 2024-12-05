@@ -3,9 +3,11 @@ defmodule Day5 do
   defp split(string, :lines), do: String.split(string, "\n", trim: true)
   defp split(string, :elems), do: String.split(string, ["|", ","], trim: true) 
 
-  def parse(string), do: split(string, :parts) |> Enum.map(&parse(&1, :lines))
-  def parse(part, :lines), do: split(part, :lines) |> Enum.map(&parse(&1, :elems))
-  def parse(line, :elems), do: split(line, :elems) |> Enum.map(&String.to_integer/1)
+  def process(input, stage), do: input |> split(stage) |> Enum.map(&parse(&1, stage))
+  def parse(input), do: process(input, :parts)
+  def parse(input, :parts), do: process(input, :lines)
+  def parse(input, :lines), do: process(input, :elems)
+  def parse(input, :elems), do: String.to_integer(input)
 
   defp is_sorted?(update, [_, _] = rule) do
     case Enum.map(rule, fn n -> Enum.find_index(update, &(&1==n)) end) do
