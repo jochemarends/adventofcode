@@ -41,6 +41,7 @@ defmodule Day6 do
   defp turn(%Guard{pos: p, dir: @down}), do: %Guard{pos: p, dir: @left}
   defp turn(%Guard{pos: p, dir: @left}), do: %Guard{pos: p, dir: @top}
 
+  def at(_, {row, col}) when row < 0 or col < 0, do: nil
   def at(map, {row, col}), do: Enum.at(Enum.at(map, row, []), col)
 
   def move(%Guard{pos: p, dir: d}), do: %Guard{pos: move(p, d), dir: d}
@@ -67,8 +68,36 @@ defmodule Day6 do
     |> Enum.uniq()
     |> Enum.count()
   end
+
+  def repeats?(map, guard, history \\ []) do
+    case at(map, guard.pos) do
+      nil -> false
+      _ -> guard in history or repeats?(map, move(map, guard), [guard | history])
+    end
+  end
+
+  def set(map, {row, col}, string) do
+    List.update_at(map, row, fn list ->
+      List.update_at(list, col, fn _ -> string end)
+    end)
+  end
+
+  def part2(map) do
+    start = guard(map)
+    for row <- 0..(length(map) - 1), col <- 0..(length(hd(map)) - 1) do
+      {row, col}
+    end
+    |> Enum.reject(&(at(map, &1) in [@obstacle, @guard]))
+    |> Task.async_stream(fn pos -> 
+      repeats?(set(map, pos, @obstacle), start)
+    end, timeout: :infinity)
+    |> Enum.map(&elem(&1, 1))
+    |> Enum.filter(&(&1 == true))
+    |> Enum.count()
+  end
 end
 
 map = Day6.parse(File.read!("./input.txt"))
 IO.puts("part 1: #{Day6.part1(map)}")
+IO.puts("part 2: #{Day6.part2(map)}")
 
