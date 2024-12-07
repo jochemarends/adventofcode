@@ -21,25 +21,24 @@ defmodule Day7 do
     eval(operators, [inner | operands])
   end
 
-  def power(enum, n) do 
+  defp power(enum, n) do 
     enum
     |> List.duplicate(n)
     |> product()
   end
 
-  def product([enum]), do: enum
+  defp product([enum]), do: enum
 
-  def product([head | tail]) do
+  defp product([head | tail]) do
     for a <- head, b <- product(tail), do: [a | b]
   end
 
-  def is_true?([result | operands], part) do
+  defp is_true?([result | operands], part) do
     operators = power(operators(part), length(operands) - 1)
-    operators
-    |> Enum.any?(&(eval(&1, operands) == result))
+    Enum.any?(operators, &(eval(&1, operands) == result))
   end
 
-  def process(input, part) do
+  defp process(input, part) do
     input
     |> Enum.filter(&is_true?(&1, part))
     |> Enum.map(&hd/1)
