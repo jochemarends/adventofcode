@@ -33,7 +33,7 @@ defmodule Day8 do
       for {x1, y1} = p1 <- points, {x2, y2} = p2 <- points, p1 != p2 do
         {x1 - (x2 - x1), y1 - (y2 - y1)}
       end
-      |>Enum.reject(&(at(map, &1) in [nil, freq]))
+      |> Enum.reject(&(at(map, &1) in [nil, freq]))
     end)
     |> Enum.uniq()
     |> Enum.count()
