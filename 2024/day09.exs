@@ -1,30 +1,24 @@
 defmodule Day9 do
-  require Integer
-
   def parse(string) do
     string
     |> String.replace("\n", "")
     |> String.graphemes()
     |> Enum.map(&String.to_integer/1)
-    |> Enum.with_index()
-    |> Enum.flat_map(fn {size, index} ->
-      case size do
-        0 -> []
-        _ when Integer.is_even(index) -> List.duplicate(div(index, 2), size)
-        _ -> List.duplicate(nil, size)
-      end
-    end)
+    |> then(&Enum.zip(&1, Enum.intersperse(0..(Enum.count(&1) - 1), nil)))
+    |> Enum.flat_map(fn {n, id} -> List.duplicate(id, n) end)
   end
 
-  def part1(list) do
-    index = Enum.find_index(list, fn {id, _} -> id != nil end)
-    case  do
-      nil -> enum
-      id = elem -> 
-        last = List.last(list)
-        list
-        |> List.replace_at(index, {elem(last, 0, index)
-        |> List.replace_at(-1, index)
+  def part1(input) do
+    case Enum.find_index(input, &(&1 == nil)) do
+      nil -> 
+        input
+        |> Enum.with_index()
+        |> Enum.reduce(0, fn {id, index}, acc -> acc + id * index end)
+      index -> 
+        input
+        |> then(&List.replace_at(&1, index, List.last(&1)))
+        |> then(&List.delete_at(&1, length(&1) - 1))
+        |> part1()
     end
   end
 
@@ -36,4 +30,6 @@ end
 File.read!("./input.txt")
 |> Day9.parse()
 |> tap(&IO.puts("part 1: #{Day9.part1(&1)}"))
-|> tap(&IO.puts("part 2: #{Day9.part2(&1)}"))
+# |> tap(&IO.puts("part 2: #{Day9.part2(&1)}"))
+
+    # |> Enum.flat_map(fn {
