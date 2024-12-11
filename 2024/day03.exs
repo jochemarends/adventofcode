@@ -3,9 +3,7 @@ defmodule Day3 do
 
   def lex(input, tokens \\ [])
 
-  def lex(<<>>, tokens) do
-    [:eof | tokens] |> Enum.reverse()
-  end
+  def lex(<<>>, tokens), do: Enum.reverse(tokens)
 
   def lex(input, tokens) do
     {token, rest} = tokenize(input)
@@ -49,10 +47,9 @@ defmodule Day3 do
 
   def eval([_ | rest], part, acc), do: eval(rest, part, acc)
 
-  def part1(input), do: input |> lex() |> eval(:part1)
-  def part2(input), do: input |> lex() |> eval(:part2)
+  def solve(input, part), do: input |> lex() |> eval(part)
 end
 
 File.read!("./input.txt")
-|> tap(&IO.puts("part 1: #{Day3.part1(&1)}"))
-|> tap(&IO.puts("part 2: #{Day3.part2(&1)}"))
+|> tap(&IO.puts("part 1: #{Day3.solve(&1, :part1)}"))
+|> tap(&IO.puts("part 2: #{Day3.solve(&1, :part2)}"))
