@@ -22,6 +22,10 @@ defmodule Day12 do
   end
 
   defp group_regions(garden) do
+    Map.keys(garden)
+    |> Enum.reduce({[], %{}}, fn pos, {groups, visited} -> 
+
+    end)
     # find adjacent that's already in a list
     # add it else add something else
   end
