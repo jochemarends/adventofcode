@@ -6,46 +6,79 @@ defmodule Day12 do
     |> Enum.flat_map(fn {line, i} ->
       line
       |> String.graphemes()
-      |> Enum.map(&String.to_integer/1)
       |> Enum.with_index()
       |> Enum.map(fn {type, j} -> {{i, j}, type} end)
     end)
     |> Map.new()
   end
 
-  defp adjacents({x, y}), do: [{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}]
+  @normals [{0, 1}, {0, -1}, {1, 0}, {-1, 0}]
+  defp adjacents({x, y}), do: @normals |> Enum.map(fn {dx, dy} -> {x + dx, y + dy} end)
 
-  defp is_interior?(garden, plot) do
-    plot
+  defp group_by_type(garden), do: Enum.group_by(Map.keys(garden), fn plot -> Map.get(garden, plot) end)
+
+  defp group_by_bordering([]), do: []
+  defp group_by_bordering([start | rest] = plots) do
+    visited = traverse(rest, start)
+    [visited | group_by_bordering(plots -- visited)]
+  end
+
+  defp traverse(plots, start, visited \\ []) do
+    start
     |> adjacents()
-    |> Enum.map(&Map.get(garden, &1))
-    |> Enum.all?(&(&1 == Map.get(garden, pos)))
+    |> Enum.filter(&(&1 not in visited and &1 in plots))
+    |> Enum.reduce([start | visited], &traverse(plots, &1, &2))
+    |> Enum.uniq()
   end
 
-  defp is_boundary?(garden, plot), do: not is_interior?(garden, plot)
-
-  defp borders_any?(region, plot), do: plot |> adjacents() |> Enum.any?(&(&1 in region))
-
-  defp group_type(garden) Enum.group_by(garden, fn plot -> Map.get(garden, plot) end)
-
-  defp walk_plots(plots, plot, visited \\ MapSet.new()) do
-    case Map.get(map, index) do
-      9 -> [index]
-      height ->
-        index
-        |> neighbours()
-        |> Enum.reject(&(&1 in visited))
-        |> Enum.filter(&(Map.get(map, &1) == height + 1))
-        |> Enum.flat_map(fn neighbour -> find_summits(map, neighbour, MapSet.put(visited, index)) end)
-    end
+  defp group_by_region(garden) do
+    garden
+    |> group_by_type()
+    |> Enum.flat_map(fn {type, plots} ->
+      group_by_bordering(plots)
+      |> Enum.map(&({type, &1}))
+    end)
   end
 
-  defp group_bordering([plot | plots]) do
-    # |> Enum.reduce([plot], fn plot, region, group_by(borders_any?
+  defp perimeter(garden, {type, plots}) do
+    plots
+    |> Enum.flat_map(&adjacents/1)
+    |> Enum.reject(&(Map.get(garden, &1) == type))
+    |> Enum.count()
   end
 
-  def part1(_), do: "todo"
-  def part2(_), do: "todo"
+  defp sides(garden, {type, plots}) do
+    plots
+    |> Enum.flat_map(fn plot ->
+      plot
+      |> adjacents()
+      |> Enum.zip(@normals)
+      |> Enum.reject(fn {plot, _} -> Map.get(garden, plot) == type end)
+    end)
+    |> Enum.group_by(fn {_, normal} -> normal end)
+    |> Map.values()
+    |> Enum.map(fn list ->
+      Enum.map(list, &elem(&1, 0))
+    end)
+    |> Enum.flat_map(&group_by_bordering/1)
+    |> Enum.count()
+  end
+
+  def part1(garden) do
+    garden
+    |> group_by_region()
+    |> Enum.reduce(0, fn {_, plots } = region, acc ->
+      acc + Enum.count(plots) * perimeter(garden, region)
+    end)
+  end
+
+  def part2(garden) do
+    garden
+    |> group_by_region()
+    |> Enum.reduce(0, fn {_, plots } = region, acc ->
+      acc + Enum.count(plots) * sides(garden, region)
+    end)
+  end
 end
 
 File.read!("./input.txt")
