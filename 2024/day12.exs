@@ -25,40 +25,39 @@ defmodule Day12 do
     |> Enum.uniq()
   end
 
-  defp group_by_bordering([]), do: []
-  defp group_by_bordering([start | rest] = plots) do
+  defp group_by_border([]), do: []
+  defp group_by_border([start | rest] = plots) do
     visited = traverse(rest, start)
-    [visited | group_by_bordering(plots -- visited)]
+    [visited | group_by_border(plots -- visited)]
   end
 
   defp group_by_region(garden) do
     garden
     |> group_by_type()
     |> Enum.flat_map(fn {type, plots} ->
-      group_by_bordering(plots)
+      group_by_border(plots)
       |> Enum.map(&({type, &1}))
     end)
   end
 
-  defp perimeter(garden, {type, plots}) do
-    plots
-    |> Enum.flat_map(&adjacents/1)
-    |> Enum.reject(&(Map.get(garden, &1) == type))
-    |> Enum.count()
-  end
-
-  defp sides(garden, {type, plots}) do
+  defp normals(garden, {type, plots}) do
     plots
     |> Enum.flat_map(fn plot ->
       plot
       |> adjacents()
       |> Enum.zip(@normals)
-      |> Enum.reject(fn {plot, _} -> Map.get(garden, plot) == type end)
     end)
+    |> Enum.reject(fn {plot, _} -> Map.get(garden, plot) == type end)
+  end
+
+  defp perimeter(garden, region), do: normals(garden, region) |> Enum.count()
+
+  defp sides(garden, region) do
+    garden
+    |> normals(region)
     |> Enum.group_by(fn {_, normal} -> normal end)
-    |> Map.values()
-    |> Enum.map(fn list -> Enum.map(list, &elem(&1, 0)) end)
-    |> Enum.flat_map(&group_by_bordering/1)
+    |> Enum.map(fn {_, normals} -> Enum.map(normals, &elem(&1, 0)) end)
+    |> Enum.flat_map(&group_by_border/1)
     |> Enum.count()
   end
 
