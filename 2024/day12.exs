@@ -17,18 +17,18 @@ defmodule Day12 do
 
   defp group_by_type(garden), do: Enum.group_by(Map.keys(garden), fn plot -> Map.get(garden, plot) end)
 
-  defp group_by_bordering([]), do: []
-  defp group_by_bordering([start | rest] = plots) do
-    visited = traverse(rest, start)
-    [visited | group_by_bordering(plots -- visited)]
-  end
-
   defp traverse(plots, start, visited \\ []) do
     start
     |> adjacents()
     |> Enum.filter(&(&1 not in visited and &1 in plots))
     |> Enum.reduce([start | visited], &traverse(plots, &1, &2))
     |> Enum.uniq()
+  end
+
+  defp group_by_bordering([]), do: []
+  defp group_by_bordering([start | rest] = plots) do
+    visited = traverse(rest, start)
+    [visited | group_by_bordering(plots -- visited)]
   end
 
   defp group_by_region(garden) do
@@ -57,28 +57,20 @@ defmodule Day12 do
     end)
     |> Enum.group_by(fn {_, normal} -> normal end)
     |> Map.values()
-    |> Enum.map(fn list ->
-      Enum.map(list, &elem(&1, 0))
-    end)
+    |> Enum.map(fn list -> Enum.map(list, &elem(&1, 0)) end)
     |> Enum.flat_map(&group_by_bordering/1)
     |> Enum.count()
   end
 
-  def part1(garden) do
+  def solve(garden, fun) do
     garden
     |> group_by_region()
-    |> Enum.reduce(0, fn {_, plots } = region, acc ->
-      acc + Enum.count(plots) * perimeter(garden, region)
-    end)
+    |> Enum.map(fn {_, plots} = region -> Enum.count(plots) * fun.(garden, region) end)
+    |> Enum.sum()
   end
 
-  def part2(garden) do
-    garden
-    |> group_by_region()
-    |> Enum.reduce(0, fn {_, plots } = region, acc ->
-      acc + Enum.count(plots) * sides(garden, region)
-    end)
-  end
+  def part1(garden), do: solve(garden, &perimeter/2)
+  def part2(garden), do: solve(garden, &sides/2)
 end
 
 File.read!("./input.txt")
