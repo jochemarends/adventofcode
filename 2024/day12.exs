@@ -42,11 +42,7 @@ defmodule Day12 do
 
   defp normals(garden, {type, plots}) do
     plots
-    |> Enum.flat_map(fn plot ->
-      plot
-      |> adjacents()
-      |> Enum.zip(@normals)
-    end)
+    |> Enum.flat_map(&(Enum.zip(adjacents(&1), @normals)))
     |> Enum.reject(fn {plot, _} -> Map.get(garden, plot) == type end)
   end
 
