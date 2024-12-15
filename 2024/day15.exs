@@ -17,17 +17,15 @@ defmodule Day15 do
 
   def parse(input) do
     [warehouse, movements] = String.split(input, "\n\n")
-
+    
     warehouse =
       warehouse
-      |> String.split("\n", trim: true)
-      |> Enum.with_index()
-      |> Enum.flat_map(fn {line, row} -> 
-        line
-        |> String.graphemes() 
-        |> Enum.with_index()
-        |> Enum.map(fn {type, col} -> {{row, col}, type} end)
-      end)
+        |> String.split("\n", trim: true)
+        |> Enum.map(&String.graphemes/1)
+
+    warehouse =
+      (for row <- 0..(length(warehouse) - 1), col <- 0..(length(hd(warehouse)) - 1), do: {row, col})
+      |> Enum.zip(List.flatten(warehouse))
       |> Enum.reject(fn {_, type} -> type == "." end)
 
     {warehouse, String.graphemes(String.replace(movements, "\n", ""))}
@@ -82,16 +80,14 @@ defmodule Day15 do
     end
   end
 
-  def solve({warehouse, movements}, part) do
-    boxes =
-      movements
-      |> Enum.reduce(warehouse, &move(&2, &1, part))
-      |> Enum.filter(fn {_, type} -> type == "O" end)
+  def score(boxes, :part1), do: Enum.reduce(boxes, 0, fn {pos, _}, acc -> acc + dot({100, 1}, pos) end)
+  def score(boxes, :part2), do: Enum.reduce(boxes, 0, fn {pos, _}, acc -> acc + dot({100, 2}, pos) end)
 
-    case part do
-      :part1 -> Enum.reduce(boxes, 0, fn {pos, _}, acc -> acc + dot({100, 1}, pos) end)
-      :part2 -> Enum.reduce(boxes, 0, fn {pos, _}, acc -> acc + dot({100, 2}, pos) end)
-    end
+  def solve({warehouse, movements}, part) do
+    movements
+    |> Enum.reduce(warehouse, &move(&2, &1, part))
+    |> Enum.filter(fn {_, type} -> type == "O" end)
+    |> then(&trunc(score(&1, part)))
   end
 end
 
