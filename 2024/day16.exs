@@ -26,13 +26,7 @@ defmodule Day16 do
     end
   end
 
-  defp weight(map, nodes) do
-    nodes
-    |> Enum.chunk_every(2, 1, :discard)
-    |> Enum.reduce(0, fn [from, to], acc -> acc + weight(map, from, to) end)
-  end
-
-  defp find_path(map, from, to) do
+  defp path(map, from, to) do
     {dx, dy} = sub(to, from)
     if dx != 0 and dy != 0 do
       [{dx, 0}, {0, dy}]
@@ -44,10 +38,10 @@ defmodule Day16 do
     end
   end
 
-  defp find_path(map, nodes) do
+  defp path(map, nodes) do
     nodes
     |> Enum.chunk_every(2, 1, :discard)
-    |> Enum.flat_map(fn [from, to] -> find_path(map, from, to) end)
+    |> Enum.flat_map(fn [from, to] -> path(map, from, to) end)
   end
 
   defp edges(map, node) do
@@ -60,45 +54,14 @@ defmodule Day16 do
     end)
   end
 
-  defp find_score(map, start, exit) do
-    distances = 
-      map
-      |> Enum.map(fn {node, _} -> {node, (if node == start, do: 0, else: nil)} end)
-      |> Map.new()
-
-    find_score(map, exit,distances, MapSet.new(Map.keys(map)))
-  end
-
-  defp find_score(map, exit, distances, unvisited) do
-    candidates = 
-      unvisited
-      |> MapSet.reject(&Map.get(distances, &1) == nil)
-
-    if MapSet.size(candidates) > 0 do
-      case Enum.min_by(candidates,&Map.get(distances, &1)) do
-        node when node == exit -> Map.get(distances, exit)
-        node ->
-          edges(map, node)
-          |> Enum.filter(&(&1 in unvisited))
-          |> Enum.map(&{&1, Map.get(distances, node) + weight(map, node, &1)})
-          |> Enum.reduce(distances, fn {node, distance}, distances ->
-            Map.put(distances, node, min(distance, Map.get(distances, node)))
-          end)
-          |> then(&find_score(map, exit, &1, MapSet.delete(unvisited, node)))
-      end
-    else
-      distances
-    end
-  end
-
-  defp fooo(map, start, exit) do
+  defp find_scores(map, start) do
     map
     |> Enum.map(fn {node, _} -> {node, {(if node == start, do: 0, else: nil), []}} end)
     |> Map.new()
-    |> then(&fooo(map, exit, &1, MapSet.new(Map.keys(map))))
+    |> then(&find_scores(map, &1, MapSet.new(Map.keys(map))))
   end
 
-  defp fooo(map, exit, stats, unvisited) do
+  defp find_scores(map, stats, unvisited) do
     distance = &elem(Map.get(stats, &1), 0)
 
     candidates = 
@@ -107,54 +70,24 @@ defmodule Day16 do
 
     if MapSet.size(candidates) > 0 do
       case Enum.min_by(candidates, distance) do
-        node when node == exit -> Map.get(stats, exit)
         node ->
           edges(map, node)
           |> Enum.filter(&(&1 in unvisited))
           |> Enum.map(&{&1, distance.(node) + weight(map, node, &1)})
-          |> Enum.reduce(stats, fn {node, new_distance}, stats ->
-            case Map.get(stats, node) do
-              {distance, predecessors} when new_distance < distance ->
+          |> Enum.reduce(stats, fn {neighbor, new_distance}, stats ->
+            case Map.get(stats, neighbor) do
+              {distance, _} when new_distance < distance ->
                 {new_distance, [node]}
               {distance, predecessors} when new_distance == distance ->
                 {distance, [node | predecessors]}
               tuple -> tuple
             end
-            |> then(&Map.put(stats, node, &1))
+            |> then(&Map.put(stats, neighbor, &1))
           end)
-          |> then(&fooo(map, exit, &1, MapSet.delete(unvisited, node)))
+          |> then(&find_scores(map, &1, MapSet.delete(unvisited, node)))
       end
-    end
-  end
-
-  defp find_best_paths(map, from, to) do
-    score = find_score(map, from, to)
-    find_best_paths(score, to, map, [[from]], [from], [])
-  end
-
-  defp find_best_paths(_, _, map, [], _, found) do 
-    Enum.map(found, &find_path(map, &1))
-  end
-  # defp find_best_paths(_, _, _, [], _, found), do: found
-
-  defp find_best_paths(max_weight, to, map, [path | queue], visited, found) do
-    node = Enum.at(path, -1)
-    # w = weight(map, find_path(map, path))
-    m = Map.filter(map, fn {pos, _} -> pos in find_path(map, path) end)
-    w = find_score(map, Enum.at(path, 0), node)
-
-    cond do
-      w > max_weight ->
-        IO.inspect(w)
-        find_best_paths(max_weight, to, map, queue, visited, found)
-      node == to ->
-        find_best_paths(max_weight, to, map, queue, visited, [path | found])
-      true ->
-        node
-        |> then(&edges(map, &1))
-        |> Enum.filter(&(&1 not in visited))
-        |> Enum.reduce(queue, &[path ++ [&1] | &2])
-        |> then(&find_best_paths(max_weight, to, map, &1, [node | visited], found))
+    else
+      stats
     end
   end
 
@@ -175,24 +108,38 @@ defmodule Day16 do
     ["S", "E"]
     |> Enum.map(&Enum.find(map, fn {_, string} -> string == &1 end))
     |> Enum.map(&elem(&1, 0))
-    |> then(fn [start, exit] -> find_score(map, start, exit) end)
+    |> then(fn [start, exit] -> Map.get(find_scores(map, start), exit) end)
+    |> elem(0)
+  end
+  
+  def backtrace(map, stats, from, visited \\ []) do
+    nodes =
+      stats
+      |> Map.get(from)
+      |> elem(1)
+      |> Enum.reject(&(&1 in [from | visited]))
+
+    case nodes do
+      [] -> path(map, [from | visited])
+      nodes -> Enum.flat_map(nodes, &backtrace(map, stats, &1, [from | visited]))
+    end
   end
 
   def part2(map) do
     ["S", "E"]
     |> Enum.map(&Enum.find(map, fn {_, string} -> string == &1 end))
     |> Enum.map(&elem(&1, 0))
-    |> then(fn [start, exit] -> fooo(map, start, exit) end)
-    # |> then(fn [start, exit] -> find_best_paths(map, start, exit) end)
-    # |> Enum.map(&Enum.uniq/1)
-    # |> List.flatten()
-    # |> Enum.uniq()
-    # |> Enum.count()
+    |> then(fn [start, exit] -> 
+      find_scores(map, start)
+      |> then(&backtrace(map, &1, exit))
+      |> Enum.uniq()
+      |> Enum.count()
+    end)
   end
 end
 
 File.read!("./input.txt")
 |> Day16.parse()
-|> Day16.part2()
-|> IO.inspect()
+|> tap(&IO.puts("part 1: #{Day16.part1(&1)}"))
+|> tap(&IO.puts("part 2: #{Day16.part2(&1)}"))
 
