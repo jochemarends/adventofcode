@@ -20,7 +20,7 @@ for {p1, p2} <- pairs |> Enum.take(1000) do
 end
 
 graph
-|> :digraph_utils.strong_components()
+|> :digraph_utils.components()
 |> Enum.map(&Enum.count/1)
 |> (&IO.puts("part 1: #{Enum.product(Enum.take(Enum.sort(&1, :desc), 3))}")).()
 
