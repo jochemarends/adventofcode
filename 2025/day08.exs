@@ -12,7 +12,7 @@ pairs =
     p2 <- Enum.drop(coords, index + 1),
     do: {p1, p2}
   )
-  |> Enum.sort_by(fn {p1, p2} -> Enum.zip_with(p1, p2, &Integer.pow(&1 - &2, 2)) |> Enum.sum() end)
+  |> Enum.sort_by(fn {p1, p2} -> Enum.zip_with(p1, p2, &((&1 - &2) ** 2)) |> Enum.sum() end)
 
 for {p1, p2} <- pairs |> Enum.take(1000) do
   Enum.each([p1, p2], &:digraph.add_vertex(graph, &1))
